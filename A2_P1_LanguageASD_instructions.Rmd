@@ -2,7 +2,8 @@
 title: "Assignment 2 - Language Development in ASD - Part 1 - Explaining development"
 author: "Malte Højmark-Bertelsen"
 date: "12/09/19"
-output: md_document:
+output: 
+  md_document:
     variant: markdown_github
 ---
     
