@@ -47,7 +47,9 @@ How did your models from last time perform? In this exercise you have to compare
 
 ```{r, include = FALSE}
 
-pacman::p_load(readr,dplyr,stringr,lmerTest,Metrics,caret)
+pacman::p_load(readr,dplyr,stringr,lmerTest,Metrics,caret,tidyverse)
+
+
 
 ## Clean up function, included to inspire you
 
@@ -99,21 +101,32 @@ CleanUpData <- function(Demo,LU,Word){
 }
 
 # Load training Data
+Demo_train <- read_csv("demo_train.csv")
+LU_train <- read_csv("LU_train.csv")
+Word_train <- read_csv("token_train.csv")
 
-
+df_train <- CleanUpData(Demo_train, LU_train, Word_train)
 #- recreate the models you chose last time (just write the code again and apply it to Train Data)
-
+m1 <- lmer(CHI_MLU ~ Visit * Diagnosis * verbalIQ1 + (1 + Visit|Child.ID), df_train, REML = F)
 
 #- calculate performance of the model on the training data: root mean square error is a good measure. (Tip: google the function rmse())
-
-
+actual <- na.omit(df_train$CHI_MLU)
+prediction <- predict(m1)
+rmse(actual, prediction)
 
 #- create the test dataset (apply the code from assignment 1 or my function to clean up the 3 test datasets)
 # Test data
+Demo_test <- read_csv("demo_test.csv")
+LU_test <- read_csv("LU_test.csv")
+Word_test <- read_csv("token_test.csv")
 
+df_test <- CleanUpData(Demo_test, LU_test, Word_test)
 #- test the performance of the models on the test data (Tips: google the functions "predict()")
-
-
+actual <- na.omit(df_test$CHI_MLU)
+prediction <- predict(m1, df_test[-2,], allow.new.levels = T)
+rmse(actual, prediction)
+x <- subset(df_test, !is.na(CHI_MLU))
+y <- df_test[-2,]
 #- optional: predictions are never certain, can you identify the uncertainty of the predictions? (e.g. google predictinterval())
 
 ```
