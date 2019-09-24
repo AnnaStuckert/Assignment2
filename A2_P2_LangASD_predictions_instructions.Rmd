@@ -224,9 +224,9 @@ LU_test
 bernie <- df_test %>% filter(Child.ID == "2")
 
 TDvsBernie <- df_train %>% filter(Diagnosis == "TD") %>% group_by(Visit) %>% summarise(mean=mean(CHI_MLU, na.rm = T)) %>% mutate(bernie$CHI_MLU) %>% mutate(bernie$CHI_MLU-mean)
-summary(m0)
 
-prediction <- predict(m0, bernie)
+mbest <- lmer(CHI_MLU ~ Visit * Diagnosis * verbalIQ1 + (1+Visit|Child.ID), data=df_train, REML = F, lmerControl(optCtrl=list(xtol_abs=1e-8, ftol_abs=1e-8)))
+prediction <- predict(mbest, bernie)
 prediction
 TDvsBernie$prediction <- prediction
 TDvsBernie[6,]
