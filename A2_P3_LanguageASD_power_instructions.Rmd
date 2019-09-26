@@ -38,7 +38,22 @@ You will be using:
 - extend() to simulate more participants
 
 ```{r}
+##Loading data
+library(pacman)
+p_load(tidyverse, lme4, simr)
+df_train <- read_csv("train.csv")
+df_test <- read_csv("test.csv")
 
+df <- merge(df_train, df_test, all = T)
+df <- df[-which(is.na(df$CHI_MLU)),]
+
+##Modelling
+model <- lmer(CHI_MLU ~ Visit * Diagnosis * verbalIQ1 + (1 + Visit | Child.ID), df_train)
+model1 <- lmer(CHI_MLU ~ Visit  + (1 + Visit | Child.ID), df, REML = F, control = lmerControl(optimizer = "nloptwrap", calc.derivs = F))
+summary(model)
+fixef(model)["Visit:DiagnosisTD:verbalIQ1"] <- 1
+
+powerSim(model1, test = fixed("Visit"), nsim = 10)
 ```
 
 

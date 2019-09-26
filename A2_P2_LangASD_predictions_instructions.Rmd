@@ -130,7 +130,8 @@ x <- subset(df_test, !is.na(CHI_MLU))
 y <- df_test[-2,]
 #RMSE is biggest on the test set which tells us that the model might be overfitting the training set.
 #- optional: predictions are never certain, can you identify the uncertainty of the predictions? (e.g. google predictinterval())
-
+write_csv(df_train, "train.csv")
+write_csv(df_test, "test.csv")
 ```
 
 [HERE GOES YOUR ANSWER]
@@ -201,6 +202,9 @@ mean(rmse2, na.rm = T) #0.44 CHI_MLU ~ Visit * Diagnosis * verbalIQ1 + (1+Visit|
 
 # Bonus Question 1: What is the effect of changing the number of folds? Can you plot RMSE as a function of number of folds?
 # Bonus Question 2: compare the cross-validated predictive error against the actual predictive error on the test data
+
+##CVMS
+githubinsta
 ```
 
 [HERE GOES YOUR ANSWER]
