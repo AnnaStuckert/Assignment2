@@ -48,12 +48,70 @@ df <- merge(df_train, df_test, all = T)
 df <- df[-which(is.na(df$CHI_MLU)),]
 
 ##Modelling
-model <- lmer(CHI_MLU ~ Visit * Diagnosis * verbalIQ1 + (1 + Visit | Child.ID), df_train)
-model1 <- lmer(CHI_MLU ~ Visit  + (1 + Visit | Child.ID), df, REML = F, control = lmerControl(optimizer = "nloptwrap", calc.derivs = F))
-summary(model)
-fixef(model)["Visit:DiagnosisTD:verbalIQ1"] <- 1
+model1 <- lmer(CHI_MLU ~ Visit + Diagnosis + verbalIQ1 + (1 + Visit | Child.ID), 
+               df, 
+               REML = F, 
+               control = lmerControl(optimizer = "nloptwrap", 
+                                     calc.derivs = F))
 
-powerSim(model1, test = fixed("Visit"), nsim = 10)
+model2 <- lmer(CHI_MLU ~ Visit * Diagnosis * verbalIQ1 + (1 + Visit | Child.ID), 
+               df, 
+               REML = F, 
+               control = lmerControl(optimizer = "nloptwrap", 
+                                     calc.derivs = F))
+summary(model1)
+summary(model2)
+
+#Checking for effect estimates
+fixef(model1)["Visit"] #0.23
+fixef(model1)["DiagnosisTD"] #-0.26
+fixef(model1)["verbalIQ1"] #0.08
+fixef(model2)["Visit:DiagnosisTD:verbalIQ1"] #0.02
+
+#Doing the power analysis; The probability of showing an effect when the effect is there. 
+set.seed(123)
+powerSim(model1, 
+         test = fixed("Visit"), 
+         nsim = 100) #100%
+powerSim(model1, 
+         test = fixed("Diagnosis"), 
+         nsim = 100) #89.00%
+powerSim(model1, 
+         test = fixed("verbalIQ1"), 
+         nsim = 100) #100.0%
+powerSim(model2, 
+         test = fixed("Visit:Diagnosis:verbalIQ1"), 
+         nsim = 100) #97%
+#There seems to be enough power for both the main effects and the interaction effect.
+
+
+pc_inter <- powerCurve(model2, 
+                       test = fixed("Visit:Diagnosis:verbalIQ1"), 
+                       along = "Child.ID", 
+                       nsim = 100)
+print(pc_inter) #around 35 is the required sample size to have a power estimate of above 80%, if you want to replicate the finding of a three way interaction effect.
+plot(pc_inter)
+
+pc_Visit <- powerCurve(model1, 
+                       test = fixed("Visit"), 
+                       along = "Child.ID", 
+                       nsim = 100)
+print(pc_Visit) #around 7 is the required sample size to have a power estimate of above 80%, if you want to replicate the finding of a three way interaction effect.
+plot(pc_Visit)
+
+pc_Diagnosis <- powerCurve(model1, 
+                       test = fixed("Diagnosis"), 
+                       along = "Child.ID", 
+                       nsim = 100)
+print(pc_Diagnosis) #around 53 is the required sample size to have a power estimate of above 80%, if you want to replicate the finding of a three way interaction effect.
+plot(pc_Diagnosis)
+
+pc_verbalIQ1 <- powerCurve(model1, 
+                       test = fixed("verbalIQ1"), 
+                       along = "Child.ID", 
+                       nsim = 100)
+print(pc_verbalIQ1) #Apparently only around 3 are the required sample size to have a power estimate of above 80%, if you want to replicate the finding of a three way interaction effect.
+plot(pc_verbalIQ1)
 ```
 
 
