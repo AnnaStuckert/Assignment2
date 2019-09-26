@@ -40,9 +40,12 @@ You will be using:
 ```{r}
 ##Loading data
 library(pacman)
-p_load(tidyverse, lme4, simr)
+p_load(tidyverse, lmerTest, simr)
 df_train <- read_csv("train.csv")
 df_test <- read_csv("test.csv")
+
+df_test$Child.ID <- 66+df_test$Child.ID
+
 
 df <- merge(df_train, df_test, all = T)
 df <- df[-which(is.na(df$CHI_MLU)),]
@@ -125,6 +128,64 @@ How would you perform a more conservative power analysis?
 - Report the power analysis and comment on what you can (or cannot) use its estimates for.
 
 ```{r}
+###How would you perform a more conservative power analysis?
+##Identify and justify a minimum effect size for each of your relevant effects
+#Specifying the minimum effect size
+fixef(model1)["Visit"] #0.23
+summary(model1)
+plot(df$CHI_MLU, df$Visit)
+ggplot(df, aes(Visit, CHI_MLU, colour = Diagnosis))+
+  geom_point()+
+  geom_smooth(method="lm")
+
+#take the model from exercise 1 and replace the effects with the minimum effect size that you'd accept.
+h0 <- lmer(CHI_MLU ~ Visit + Diagnosis + (1+Visit|Child.ID), 
+           df, 
+           REML = F, 
+           control = lmerControl(optimizer = "nloptwrap", 
+                                     calc.derivs = F))
+summary(h0)
+fixef(h0)["Visit"] #0.23
+fixef(h0)["DiagnosisTD"] #0.23
+#Defining the model from exercise 1
+h1 <- lmer(CHI_MLU ~ Visit * Diagnosis + (1+Visit|Child.ID), 
+           df, 
+           REML = F, 
+           control = lmerControl(optimizer = "nloptwrap", 
+                                     calc.derivs = F))
+#Power simulation for Visit
+summary(h1)
+fixef(h1)["Visit"]  #0.10
+fixef(h1)["Visit"] <- 0.23 #Choosing 0.23 because the simpler model where there is no interaction says that there is a mean increase of 0.23 MLU per visit.
+pc_Visit2 <- powerCurve(h1, 
+                       test = fixed("Visit"), 
+                       along = "Child.ID", 
+                       nsim = 100)
+print(pc_Visit2) #There is no threshhold where we have a sufficient amount of power. An extension of our data is needed.
+plot(pc_Visit2)
+
+#Power simulation for diagnosis
+fixef(h1)["DiagnosisTD"] #-0.23
+fixef(h1)["DiagnosisTD"] <- 0.23 #Choosing 0.23 because the simpler model where there is no interaction says that there is a mean increase of 0.23 from being an ASD kid than being a TD kid. IS THIS RIGHT!=?!?!?!?!?!?
+pc_Diagnosis2 <- powerCurve(h1, 
+                       test = fixed("Diagnosis"), 
+                       along = "Child.ID", 
+                       nsim = 100)
+print(pc_Diagnosis2) #There is no threshhold where we have a sufficient amount of power. An extension of our data is needed.
+plot(pc_Diagnosis2)
+
+
+#Power simulation for interaction
+fixef(h1)["Visit:DiagnosisTD"] 
+fixef(h1)["Visit:DiagnosisTD"] <- 0.1 #Just choosing an abritrary number 
+#assess the power curve by Child.ID, identifying an ideal number of participants to estimate each effect
+pc_inter2 <- powerCurve(h1, 
+                       test = fixed("Visit:Diagnosis"), 
+                       along = "Child.ID", 
+                       nsim = 100)
+print(pc_inter2)#around 65 is the required sample size to have a power estimate of above 80%, given that the effect size is changed to 0.1.
+plot(pc_inter2)
+
 
 ```
 
